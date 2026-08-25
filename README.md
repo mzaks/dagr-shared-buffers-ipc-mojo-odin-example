@@ -13,7 +13,9 @@ They never send messages or copy a serialized buffer. They agree on a **fixed
 memory layout** and take turns through a lock-free handshake — that's the whole
 point of a Dagr **`SharedBuffer`**.
 
-<!-- A screen recording / GIF goes great right here. -->
+![A fractal forest computed on the GPU in Mojo, streamed through one shared buffer, and rendered by a separate Odin + raylib process](fractal-forest.gif)
+
+*Left process (Mojo, GPU) computes the forest and publishes each frame; right process (Odin, raylib) reads and draws it — sharing one `mmap`'d region, no serialization. Recorded straight from the running demo.*
 
 ## Why this works: fixed-layout SharedBuffers
 
