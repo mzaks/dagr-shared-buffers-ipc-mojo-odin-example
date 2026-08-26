@@ -15,6 +15,7 @@ import "core:os"
 import "core:sys/posix"
 import "core:time"
 import rl "vendor:raylib"
+import "vendor:raylib/rlgl"
 import fsb "forest_sb"
 
 // Window size, forest depth, and the shared-region path all come from the schema
@@ -63,6 +64,50 @@ branch_color :: proc(depth: int) -> rl.Color {
 	return rl.Color{r, g, b, 255}
 }
 
+// Depths below this are the trunk + major limbs (a few thousand segments): drawn as
+// thick anti-aliased quads. Everything deeper — the fine mass, ~95% of the forest —
+// is streamed as 1px GL lines through rlgl, which is far cheaper per segment and
+// scales to hundreds of thousands of branches at well over 60 fps. rlgl's internal
+// batch buffer is finite, so the line stream is flushed every GL_LINE_CHUNK lines
+// (End → DrawRenderBatchActive → Begin) — otherwise a large forest silently drops
+// every branch past the first bufferful.
+THICK_MAX_DEPTH :: 8
+GL_LINE_CHUNK :: 8000
+
+draw_forest :: proc(f: fsb.Forest, n: int) {
+	// pass 1 — thick trunks + major limbs, drawn first so the canopy sits over them.
+	for i in 0 ..< n {
+		depth := int(fsb.forest_depth(f, i))
+		if depth >= THICK_MAX_DEPTH {
+			continue
+		}
+		start := rl.Vector2{fsb.forest_x0(f, i), fsb.forest_y0(f, i)}
+		end := rl.Vector2{fsb.forest_x1(f, i), fsb.forest_y1(f, i)}
+		rl.DrawLineEx(start, end, f32(fsb.TREE_DEPTH - depth) * 0.7, branch_color(depth))
+	}
+	// pass 2 — the fine branches, batched as one GL_LINES stream (chunk-flushed).
+	rlgl.Begin(rlgl.LINES)
+	pending := 0
+	for i in 0 ..< n {
+		depth := int(fsb.forest_depth(f, i))
+		if depth < THICK_MAX_DEPTH {
+			continue
+		}
+		col := branch_color(depth)
+		rlgl.Color4ub(col.r, col.g, col.b, 255)
+		rlgl.Vertex2f(fsb.forest_x0(f, i), fsb.forest_y0(f, i))
+		rlgl.Vertex2f(fsb.forest_x1(f, i), fsb.forest_y1(f, i))
+		pending += 1
+		if pending >= GL_LINE_CHUNK {
+			rlgl.End()
+			rlgl.DrawRenderBatchActive() // flush so the buffer can't overflow
+			rlgl.Begin(rlgl.LINES)
+			pending = 0
+		}
+	}
+	rlgl.End()
+}
+
 main :: proc() {
 	region := attach()
 	consumer := fsb.consumer_from_raw(region)
@@ -79,13 +124,7 @@ main :: proc() {
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Color{14, 16, 22, 255})
 
-		for i in 0 ..< n {
-			depth := int(fsb.forest_depth(f, i))
-			start := rl.Vector2{fsb.forest_x0(f, i), fsb.forest_y0(f, i)}
-			end := rl.Vector2{fsb.forest_x1(f, i), fsb.forest_y1(f, i)}
-			thick := max(f32(1.0), f32(fsb.TREE_DEPTH - depth) * 0.7)
-			rl.DrawLineEx(start, end, thick, branch_color(depth))
-		}
+		draw_forest(f, n)
 
 		rl.DrawText(
 			rl.TextFormat("Mojo GPU  ->  Dagr SharedBuffer (mmap, double_buffer)  ->  Odin raylib"),

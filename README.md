@@ -119,7 +119,9 @@ next to the compute the GPU saves. (At the original 12k segments the gap was onl
   (one atomic exchange). Runs until stopped.
 - [`renderer.odin`](renderer.odin) — `mmap`s the same region, and each frame latches
   the newest published slot and draws every branch with raylib (colour + thickness
-  by depth).
+  by depth). Trunks and major limbs are thick anti-aliased quads; the ~130k fine
+  branches are streamed as one batched `rlgl` GL-line pass (chunk-flushed so none are
+  dropped) — which renders the whole forest at ~120 fps instead of ~85.
 - [`forest_sb/`](forest_sb) — the generated Odin overlay package the renderer
   imports.
 - [`ForestSharedBuffer.mojo`](ForestSharedBuffer.mojo) — the generated Mojo overlay
