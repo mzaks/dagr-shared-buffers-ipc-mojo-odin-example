@@ -9,6 +9,18 @@ import "base:intrinsics"
 BYTE_SIZE :: 626944
 REGION_ALIGN :: 64
 ROOT_OFFSET :: 64
+// Schema constants (pure API — not stored in the buffer).
+TREES :: 3
+TREE_DEPTH :: 12
+SEG_CAP :: 12288
+WORLD_W :: 1280.0
+WORLD_H :: 800.0
+L0 :: 150.0
+RATIO :: 0.74
+THETA :: 0.4
+WIND :: 0.06
+SPEED :: 1.3
+PATH :: "/tmp/dagr_forest_ipc.bin"
 
 // bf16 has no native Odin type: stored as u16 bits, API type is f32.
 _bf16_to_f32 :: proc(b: u16) -> f32 { return transmute(f32)(u32(b) << 16) }

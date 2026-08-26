@@ -40,8 +40,27 @@ TREES = 3
 TREE_DEPTH = 12                       # 4095 branches/tree
 SEG_CAP = 12288                       # >= TREES*(2**TREE_DEPTH - 1) = 12285, /64 = 192
 
+# The forest's tunable parameters + the shared-region path. Declared as SharedBuffer
+# `constants` below, they are emitted as compile-time constants into BOTH generated
+# overlays (Mojo and Odin) — so the producer and the renderer read one source of
+# truth instead of each hard-coding their own copy.
+WORLD_W = 1280.0                      # virtual canvas the producer draws into / window size
+WORLD_H = 800.0
+L0 = 150.0                            # trunk length (px)
+RATIO = 0.74                         # child / parent branch length
+THETA = 0.40                         # branch half-angle (rad)
+WIND = 0.06                          # sway amplitude (rad / level)
+SPEED = 1.3                          # sway temporal frequency
+PATH = "/tmp/dagr_forest_ipc.bin"    # the mmap'd region both processes open
+
 Forest = SharedBuffer("Forest", root_type="Forest", concurrency="double_buffer",
-                      node_types=[
+    constants={
+        "TREES": TREES, "TREE_DEPTH": TREE_DEPTH, "SEG_CAP": SEG_CAP,
+        "WORLD_W": WORLD_W, "WORLD_H": WORLD_H,
+        "L0": L0, "RATIO": RATIO, "THETA": THETA, "WIND": WIND, "SPEED": SPEED,
+        "PATH": PATH,
+    },
+    node_types=[
     Node("Forest", frozen=True, fields=[
         "count" >> t.u32 >> required,
         "frame" >> t.u32 >> required,

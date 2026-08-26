@@ -126,8 +126,11 @@ dagr build --schema forest_schema.py
 - **The GPU-friendly slice of Dagr.** The buffer stores 64-byte-aligned numeric arrays
   (branch endpoints as `f32`, depth as `u8`). Bit-packed and pointer/reference fields
   are deliberately out of scope on-device.
-- **Coordinates are in a fixed 1280×800 space** that the renderer draws 1:1; the
-  producer and renderer keep that (and the forest depth) in sync as plain constants.
+- **One source of truth for the parameters.** The forest's numbers (`TREES`,
+  `TREE_DEPTH`, `WORLD_W/H`, sway tuning) and the shared-region `PATH` are declared
+  once as **SharedBuffer `constants`** in `forest_schema.py`. The Dagr CLI emits them
+  as compile-time constants into *both* overlays, so the Mojo producer and the Odin
+  renderer read the same values — nothing is hand-copied between the two languages.
 
 ## Related
 

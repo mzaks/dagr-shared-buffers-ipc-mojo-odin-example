@@ -11,6 +11,19 @@ comptime BYTE_SIZE = 626944
 comptime REGION_ALIGN = 64
 comptime ROOT_OFFSET = 64
 
+# Schema constants (pure API — not stored in the buffer).
+comptime TREES = 3
+comptime TREE_DEPTH = 12
+comptime SEG_CAP = 12288
+comptime WORLD_W = 1280.0
+comptime WORLD_H = 800.0
+comptime L0 = 150.0
+comptime RATIO = 0.74
+comptime THETA = 0.4
+comptime WIND = 0.06
+comptime SPEED = 1.3
+comptime PATH = "/tmp/dagr_forest_ipc.bin"
+
 @fieldwise_init
 struct Forest(Copyable, Movable):
     var ptr: Pointer[UInt8, MutUntrackedOrigin]

@@ -19,26 +19,19 @@ from std.math import sin, cos
 from std.memory import unsafe_memcpy
 from std.sys import argv
 from max.gpu.host import DeviceContext
-from ForestSharedBuffer import Forest, Producer, NODE_SIZE, BYTE_SIZE
+# TREES / TREE_DEPTH / WORLD_* / L0 / RATIO / THETA / WIND / SPEED / PATH all come
+# from the SharedBuffer schema — one source of truth, emitted into this overlay AND
+# the Odin renderer's. (They're untyped compile-time constants that adapt to their
+# use site, e.g. Float32 in the kernel below.)
+from ForestSharedBuffer import (
+    Forest, Producer, NODE_SIZE, BYTE_SIZE,
+    TREES, TREE_DEPTH, WORLD_W, WORLD_H, L0, RATIO, THETA, WIND, SPEED, PATH,
+)
 
-# ── forest parameters (must match forest_schema.py capacities) ────────────────
-comptime TREES      = 3
-comptime TREE_DEPTH = 12
-comptime BRANCHES   = (1 << TREE_DEPTH) - 1      # 4095 branches per tree
-comptime TOTAL      = TREES * BRANCHES           # 12285 segments (<= SEG_CAP 12288)
-
-comptime WORLD_W = Float32(1280.0)
-comptime WORLD_H = Float32(800.0)
-comptime L0      = Float32(150.0)                # trunk length (px)
-comptime RATIO   = Float32(0.74)                 # child / parent length
-comptime THETA   = Float32(0.40)                 # branch half-angle (rad)
-comptime WIND    = Float32(0.06)                 # sway amplitude (rad / level)
-comptime SPEED   = Float32(1.3)                  # sway temporal frequency
-comptime HALF_PI = Float32(1.5707963)
-
-# The shared region path — the renderer opens the SAME path. Kept in sync by hand
-# (a fixed string in both binaries) so neither side needs CLI args to find it.
-comptime PATH = "/tmp/dagr_forest_ipc.bin"
+# Derived from the schema constants.
+comptime BRANCHES = (1 << TREE_DEPTH) - 1        # 4095 branches per tree
+comptime TOTAL    = TREES * BRANCHES             # 12285 segments (<= SEG_CAP)
+comptime HALF_PI  = 1.5707963                    # pointing straight up
 
 # macOS open/mmap constants
 comptime O_RDWR = 0x0002
@@ -75,11 +68,11 @@ def k_forest(base: PTR, time: Float32):
         bb >>= 1
         d += 1
 
-    var spacing = WORLD_W / Float32(TREES)
-    var x = spacing * (Float32(tree) + 0.5)        # trunk base X
-    var y = WORLD_H - 12.0                          # trunk base Y (near the ground)
-    var ang = -HALF_PI                              # pointing up (screen Y grows downward)
-    var ln = L0
+    var spacing = Float32(WORLD_W) / Float32(TREES)
+    var x: Float32 = spacing * (Float32(tree) + 0.5)   # trunk base X
+    var y: Float32 = WORLD_H - 12.0                     # trunk base Y (near the ground)
+    var ang: Float32 = -HALF_PI                         # pointing up (screen Y grows downward)
+    var ln: Float32 = L0
 
     # Walk root -> b, following the bits of b below its MSB (0 = left, 1 = right).
     # Every branch through a given (level, tree) applies the SAME sway, so a child's

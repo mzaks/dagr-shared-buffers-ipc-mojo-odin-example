@@ -17,30 +17,31 @@ import "core:time"
 import rl "vendor:raylib"
 import fsb "forest_sb"
 
-WIN_W :: 1280
-WIN_H :: 800
-TREE_DEPTH :: 12 // must match forest_schema.py / producer.mojo
-PATH :: "/tmp/dagr_forest_ipc.bin"
+// Window size, forest depth, and the shared-region path all come from the schema
+// (imported from the generated `forest_sb` overlay) — one source of truth shared
+// with the Mojo producer, nothing duplicated here.
+WIN_W :: i32(fsb.WORLD_W)
+WIN_H :: i32(fsb.WORLD_H)
 
 // Wait until the producer has created and sized the shared file, then mmap it RW
 // (the double_buffer consumer mutates the control word, so it needs write access).
 attach :: proc() -> [^]u8 {
 	waited := 0
 	for {
-		if info, err := os.stat(PATH, context.temp_allocator); err == nil && info.size >= i64(fsb.BYTE_SIZE) {
+		if info, err := os.stat(fsb.PATH, context.temp_allocator); err == nil && info.size >= i64(fsb.BYTE_SIZE) {
 			break
 		}
 		free_all(context.temp_allocator)
 		time.sleep(20 * time.Millisecond)
 		waited += 20
 		if waited > 15_000 {
-			fmt.eprintln("renderer: timed out waiting for the producer to create", PATH)
+			fmt.eprintln("renderer: timed out waiting for the producer to create", fsb.PATH)
 			os.exit(1)
 		}
 	}
-	fd := posix.open(PATH, {.RDWR})
+	fd := posix.open(fsb.PATH, {.RDWR})
 	if fd < 0 {
-		fmt.eprintln("renderer: cannot open", PATH)
+		fmt.eprintln("renderer: cannot open", fsb.PATH)
 		os.exit(1)
 	}
 	addr := posix.mmap(nil, uint(fsb.BYTE_SIZE), {.READ, .WRITE}, {.SHARED}, fd, 0)
@@ -55,7 +56,7 @@ attach :: proc() -> [^]u8 {
 // Colour a branch by depth: trunk brown → canopy green, with a little lift so the
 // tips read as foliage.
 branch_color :: proc(depth: int) -> rl.Color {
-	t := f32(depth) / f32(TREE_DEPTH)
+	t := f32(depth) / f32(fsb.TREE_DEPTH)
 	r := u8(110 * (1 - t) + 70 * t)
 	g := u8(70 * (1 - t) + 200 * t)
 	b := u8(45 * (1 - t) + 90 * t)
@@ -82,7 +83,7 @@ main :: proc() {
 			depth := int(fsb.forest_depth(f, i))
 			start := rl.Vector2{fsb.forest_x0(f, i), fsb.forest_y0(f, i)}
 			end := rl.Vector2{fsb.forest_x1(f, i), fsb.forest_y1(f, i)}
-			thick := max(f32(1.0), f32(TREE_DEPTH - depth) * 0.7)
+			thick := max(f32(1.0), f32(fsb.TREE_DEPTH - depth) * 0.7)
 			rl.DrawLineEx(start, end, thick, branch_color(depth))
 		}
 
