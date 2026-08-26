@@ -128,3 +128,11 @@ dagr build --schema forest_schema.py
   are deliberately out of scope on-device.
 - **Coordinates are in a fixed 1280×800 space** that the renderer draws 1:1; the
   producer and renderer keep that (and the forest depth) in sync as plain constants.
+
+## Related
+
+- **[Dagr SharedBuffers — cross-language FFI & GPU example](https://github.com/mzaks/dagr-shared-buffers-ffi-and-gpu-example)**
+  — the same fixed-layout idea *within* a single process: a Mojo GPU kernel drives a
+  SharedBuffer in place and hands the bytes to Rust over a C-ABI FFI (both directions),
+  with a synchronous `none` hand-off instead of this repo's cross-process
+  `double_buffer`.
