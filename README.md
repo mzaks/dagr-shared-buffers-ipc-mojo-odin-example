@@ -65,10 +65,23 @@ pixi run demo       # or: ./run_demo.sh
 Close the render window (or press **ESC**) to end the demo; the producer is stopped
 automatically.
 
+**GPU or CPU.** The producer computes the forest on the **GPU** when a device is
+present and falls back to the **CPU** otherwise — the exact same per-branch function
+runs on a GPU thread or in a host loop. You can also force a backend:
+
+```bash
+pixi run demo cpu     # force CPU     (or: ./run_demo.sh cpu)
+pixi run demo gpu     # force GPU     (or: ./run_demo.sh gpu)
+```
+
+(CPU and GPU output match to sub-pixel precision — max ~6e-5 px over the whole
+forest.)
+
 **Requirements**
 
-- An **Apple Silicon GPU** (the producer uses Mojo's Metal GPU stack).
 - The **Mojo / MAX toolchain**, via [pixi](https://pixi.sh) — see [`pixi.toml`](pixi.toml).
+- An **Apple Silicon GPU** for the GPU path (Mojo's Metal stack); optional — the
+  producer runs on the CPU without one.
 - The **[Odin](https://odin-lang.org) compiler**, which bundles `vendor:raylib` (no
   separate raylib install needed).
 
@@ -80,16 +93,17 @@ automatically.
         ├────────────► ForestSharedBuffer.mojo   ← Mojo overlay (producer)
         └────────────► forest_sb/                ← Odin overlay package (renderer)
 
-  producer.mojo  ──GPU──►  device node ──copy──►  ┌─────────────────────┐
-                                                  │  mmap'd region      │
-                          commit() atomic ───────►│  [ctrl][slot0..2]   │
-                                                  └─────────┬───────────┘
+  producer.mojo  ──GPU or CPU──►  branches ──►  ┌─────────────────────┐
+                                                │  mmap'd region      │
+                        commit() atomic ───────►│  [ctrl][slot0..2]   │
+                                                └─────────┬───────────┘
   renderer.odin  ◄──raylib──  latest frame  ◄──consumer_read()──┘
 ```
 
-- [`producer.mojo`](producer.mojo) — `mmap`s the region, runs the fractal-forest GPU
-  kernel each frame, copies the finished node into an off-screen slot, and
-  `commit()`s it (one atomic exchange). Runs until stopped.
+- [`producer.mojo`](producer.mojo) — `mmap`s the region and each frame fills an
+  off-screen slot with the fractal forest (on the **GPU** via a one-thread-per-branch
+  kernel, or the **CPU** via the same function in a host loop) and `commit()`s it
+  (one atomic exchange). Runs until stopped.
 - [`renderer.odin`](renderer.odin) — `mmap`s the same region, and each frame latches
   the newest published slot and draws every branch with raylib (colour + thickness
   by depth).

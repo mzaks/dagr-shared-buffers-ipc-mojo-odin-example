@@ -35,9 +35,13 @@ pixi run mojo build producer.mojo -o producer
 rm -f "$REGION"
 
 # Start the producer (process A). It creates + mmaps the region and publishes
-# frames until killed.
+# frames until killed. Any args are forwarded to the producer, so:
+#   ./run_demo.sh          # auto: GPU if present, else CPU
+#   ./run_demo.sh cpu      # force the CPU backend
+#   ./run_demo.sh gpu      # force the GPU backend
+# (via pixi: `pixi run demo cpu`).
 echo "== launch producer (process A) =="
-pixi run ./producer &
+pixi run ./producer "$@" &
 PRODUCER_PID=$!
 # Make sure the producer is stopped when the renderer window closes (or on error).
 cleanup() { kill "$PRODUCER_PID" 2>/dev/null || true; pkill -f '/producer( |$)' 2>/dev/null || true; }
