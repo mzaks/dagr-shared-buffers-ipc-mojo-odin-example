@@ -12,8 +12,8 @@ comptime REGION_ALIGN = 64
 comptime ROOT_OFFSET = 64
 
 # Schema constants (pure API — not stored in the buffer).
-comptime TREES = 8
-comptime TREE_DEPTH = 14
+comptime TREES = 16
+comptime TREE_DEPTH = 13
 comptime SEG_CAP = 131072
 comptime WORLD_W = 1920.0
 comptime WORLD_H = 1000.0

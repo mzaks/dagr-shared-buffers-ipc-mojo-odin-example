@@ -10,8 +10,8 @@ BYTE_SIZE :: 6684928
 REGION_ALIGN :: 64
 ROOT_OFFSET :: 64
 // Schema constants (pure API — not stored in the buffer).
-TREES :: 8
-TREE_DEPTH :: 14
+TREES :: 16
+TREE_DEPTH :: 13
 SEG_CAP :: 131072
 WORLD_W :: 1920.0
 WORLD_H :: 1000.0

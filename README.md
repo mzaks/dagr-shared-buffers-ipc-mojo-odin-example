@@ -52,8 +52,13 @@ A fractal tree is usually built by recursion, but here every branch is computed
 it into a root-to-branch path (the bits of the index pick left/right at each level),
 and walks that path to a world transform. Add a time-varying wind term that grows
 with depth and the whole forest sways coherently — the trunks stay put, the canopy
-moves. A forest of 8 trees at depth 14 is **131,064 line segments**, recomputed every
+moves. A forest of 16 trees at depth 13 is **131,056 line segments**, recomputed every
 single frame.
+
+(`TREES` and `TREE_DEPTH` are pure-API schema constants — they don't affect the wire
+layout, which is fixed by `SEG_CAP`. So going from 8 deep trees to 16 shallower ones
+is just two numbers in the schema: the overlays regenerate, the producer and renderer
+rebuild unchanged, and the buffer stays byte-compatible.)
 
 The producer also places the trees for depth: each is given a distance, so farther
 ones are smaller, sit higher, and are packed back-to-front in the array. The renderer
@@ -84,7 +89,7 @@ pixi run demo gpu     # force GPU     (or: ./run_demo.sh gpu)
 (CPU and GPU output match to sub-pixel precision — max ~6e-5 px over the whole
 forest.)
 
-At 131,064 segments the two backends pull apart (measured per-frame compute on an
+At ~131k segments the two backends pull apart (measured per-frame compute on an
 M4 Max, sleep removed):
 
 | Backend | per frame | throughput |

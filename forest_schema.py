@@ -36,9 +36,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # A forest of TREES fractal trees, each a full binary tree of depth TREE_DEPTH.
 # Branches per tree = 2**TREE_DEPTH - 1; capacity is rounded up to a multiple of 64
 # (matches the aligned(64) regions and leaves headroom).
-TREES = 8
-TREE_DEPTH = 14                       # 16383 branches/tree
-SEG_CAP = 131072                      # >= TREES*(2**TREE_DEPTH - 1) = 131064, /64 = 2048
+TREES = 16
+TREE_DEPTH = 13                       # 8191 branches/tree
+SEG_CAP = 131072                      # >= TREES*(2**TREE_DEPTH - 1) = 131056, /64 = 2048
+                                      # (SEG_CAP fixes the node size; TREES/TREE_DEPTH are
+                                      # pure-API constants, so this stays wire-compatible)
 
 # The forest's tunable parameters + the shared-region path. Declared as SharedBuffer
 # `constants` below, they are emitted as compile-time constants into BOTH generated
