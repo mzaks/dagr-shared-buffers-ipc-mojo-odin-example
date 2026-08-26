@@ -68,11 +68,20 @@ def write_branch(f: Forest, g: Int, time: Float32):
         bb >>= 1
         d += 1
 
-    var spacing = Float32(WORLD_W) / Float32(TREES)
-    var x: Float32 = spacing * (Float32(tree) + 0.5)   # trunk base X
-    var y: Float32 = WORLD_H - 12.0                     # trunk base Y (near the ground)
-    var ang: Float32 = -HALF_PI                         # pointing up (screen Y grows downward)
-    var ln: Float32 = L0
+    # Perspective layout: tree 0 is the FARTHEST, tree TREES-1 the NEAREST, so the
+    # segment array runs back-to-front and the renderer's painter order occludes far
+    # trees behind near ones for free. Farther trees are smaller and sit higher up
+    # (closer to the horizon); x is scattered with a golden-ratio low-discrepancy
+    # sequence so they don't line up in a row.
+    var dist: Float32 = 1.0 - Float32(tree) / Float32(TREES - 1)   # 1 = far … 0 = near
+    var scale: Float32 = 1.0 - 0.55 * dist                        # far trees ~0.45x size
+    var v: Float32 = (Float32(tree) + 0.5) * 0.6180339887
+    var xfrac: Float32 = v - Float32(Int(v))                      # fractional part in [0,1)
+    var margin: Float32 = 90.0
+    var x: Float32 = margin + xfrac * (WORLD_W - 2.0 * margin)    # scattered trunk base X
+    var y: Float32 = (WORLD_H - 20.0) - dist * (WORLD_H * 0.42)   # far trees higher on screen
+    var ang: Float32 = -HALF_PI                                   # pointing up (screen Y grows downward)
+    var ln: Float32 = L0 * scale
 
     # Walk root -> b, following the bits of b below its MSB (0 = left, 1 = right).
     # Every branch through a given (level, tree) applies the SAME sway, so a child's

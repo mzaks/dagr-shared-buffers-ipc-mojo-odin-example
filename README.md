@@ -55,6 +55,13 @@ with depth and the whole forest sways coherently — the trunks stay put, the ca
 moves. A forest of 8 trees at depth 14 is **131,064 line segments**, recomputed every
 single frame.
 
+The producer also places the trees for depth: each is given a distance, so farther
+ones are smaller, sit higher, and are packed back-to-front in the array. The renderer
+draws them in that order (near trees occlude far ones) and fades each tree toward a
+blue-grey haze by its distance — atmospheric perspective, with no extra data in the
+buffer (it re-derives a segment's tree from its index, since `TREES`/`TREE_DEPTH` are
+shared schema constants).
+
 ## Run it
 
 ```bash

@@ -54,14 +54,28 @@ attach :: proc() -> [^]u8 {
 	return cast([^]u8)addr
 }
 
-// Colour a branch by depth: trunk brown → canopy green, with a little lift so the
-// tips read as foliage.
-branch_color :: proc(depth: int) -> rl.Color {
+HAZE :: rl.Color{40, 52, 70, 255} // misty blue-grey the distance fades toward
+// The producer packs BRANCHES segments per tree, contiguously, with tree 0 the
+// farthest (so the array runs back-to-front). The renderer re-derives which tree a
+// segment belongs to from its index — TREES and TREE_DEPTH are shared schema
+// constants — and fades the whole tree toward the haze colour by its distance.
+BRANCHES :: (1 << uint(fsb.TREE_DEPTH)) - 1
+
+// Colour a branch by depth (trunk brown → canopy green), then apply atmospheric
+// perspective: the farther the tree, the more it fades into the haze.
+branch_color :: proc(depth: int, seg: int) -> rl.Color {
 	t := f32(depth) / f32(fsb.TREE_DEPTH)
-	r := u8(110 * (1 - t) + 70 * t)
-	g := u8(70 * (1 - t) + 200 * t)
-	b := u8(45 * (1 - t) + 90 * t)
-	return rl.Color{r, g, b, 255}
+	r := f32(110) * (1 - t) + 70 * t
+	g := f32(70) * (1 - t) + 200 * t
+	b := f32(45) * (1 - t) + 90 * t
+	dist := 1 - f32(seg / BRANCHES) / f32(fsb.TREES - 1) // 1 = far, 0 = near
+	h := dist * 0.82
+	return rl.Color{
+		u8(r * (1 - h) + f32(HAZE.r) * h),
+		u8(g * (1 - h) + f32(HAZE.g) * h),
+		u8(b * (1 - h) + f32(HAZE.b) * h),
+		255,
+	}
 }
 
 // Depths below this are the trunk + major limbs (a few thousand segments): drawn as
@@ -81,9 +95,10 @@ draw_forest :: proc(f: fsb.Forest, n: int) {
 		if depth >= THICK_MAX_DEPTH {
 			continue
 		}
-		start := rl.Vector2{fsb.forest_x0(f, i), fsb.forest_y0(f, i)}
+		y0 := fsb.forest_y0(f, i)
+		start := rl.Vector2{fsb.forest_x0(f, i), y0}
 		end := rl.Vector2{fsb.forest_x1(f, i), fsb.forest_y1(f, i)}
-		rl.DrawLineEx(start, end, f32(fsb.TREE_DEPTH - depth) * 0.7, branch_color(depth))
+		rl.DrawLineEx(start, end, f32(fsb.TREE_DEPTH - depth) * 0.7, branch_color(depth, i))
 	}
 	// pass 2 — the fine branches, batched as one GL_LINES stream (chunk-flushed).
 	rlgl.Begin(rlgl.LINES)
@@ -93,9 +108,10 @@ draw_forest :: proc(f: fsb.Forest, n: int) {
 		if depth < THICK_MAX_DEPTH {
 			continue
 		}
-		col := branch_color(depth)
+		y0 := fsb.forest_y0(f, i)
+		col := branch_color(depth, i)
 		rlgl.Color4ub(col.r, col.g, col.b, 255)
-		rlgl.Vertex2f(fsb.forest_x0(f, i), fsb.forest_y0(f, i))
+		rlgl.Vertex2f(fsb.forest_x0(f, i), y0)
 		rlgl.Vertex2f(fsb.forest_x1(f, i), fsb.forest_y1(f, i))
 		pending += 1
 		if pending >= GL_LINE_CHUNK {
