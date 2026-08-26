@@ -75,7 +75,8 @@ pixi run demo       # or: ./run_demo.sh
 ```
 
 Close the render window (or press **ESC**) to end the demo; the producer is stopped
-automatically.
+automatically. The window is **resizable** — the forest is letterboxed to fit any
+size, so it scales cleanly without distorting.
 
 **GPU or CPU.** The producer computes the forest on the **GPU** when a device is
 present and falls back to the **CPU** otherwise — the exact same per-branch function

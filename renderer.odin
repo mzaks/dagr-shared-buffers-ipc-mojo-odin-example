@@ -18,11 +18,12 @@ import rl "vendor:raylib"
 import "vendor:raylib/rlgl"
 import fsb "forest_sb"
 
-// Window size, forest depth, and the shared-region path all come from the schema
-// (imported from the generated `forest_sb` overlay) — one source of truth shared
-// with the Mojo producer, nothing duplicated here.
-WIN_W :: i32(fsb.WORLD_W)
-WIN_H :: i32(fsb.WORLD_H)
+// Forest depth and the shared-region path come from the schema (imported from the
+// generated `forest_sb` overlay) — one source of truth shared with the Mojo producer.
+// The producer draws into a fixed WORLD_W x WORLD_H canvas; the window opens a bit
+// smaller than that and is resizable — the forest is letterboxed to fit (below).
+WIN_W :: i32(fsb.WORLD_W) * 72 / 100
+WIN_H :: i32(fsb.WORLD_H) * 72 / 100
 
 // Wait until the producer has created and sized the shared file, then mmap it RW
 // (the double_buffer consumer mutates the control word, so it needs write access).
@@ -128,7 +129,7 @@ main :: proc() {
 	region := attach()
 	consumer := fsb.consumer_from_raw(region)
 
-	rl.SetConfigFlags({.MSAA_4X_HINT})
+	rl.SetConfigFlags({.WINDOW_RESIZABLE, .MSAA_4X_HINT})
 	rl.InitWindow(WIN_W, WIN_H, "Dagr SharedBuffer IPC — Mojo GPU → Odin raylib")
 	rl.SetTargetFPS(60)
 
@@ -137,10 +138,23 @@ main :: proc() {
 		n := int(fsb.forest_count(f))
 		frame := fsb.forest_frame(f)
 
+		// Fit the fixed WORLD_W x WORLD_H canvas into the current window, preserving
+		// aspect (letterbox), so the forest scales to any window size the user picks.
+		winW := f32(rl.GetScreenWidth())
+		winH := f32(rl.GetScreenHeight())
+		scale := min(winW / f32(fsb.WORLD_W), winH / f32(fsb.WORLD_H))
+		cam := rl.Camera2D {
+			offset   = {(winW - f32(fsb.WORLD_W) * scale) * 0.5, (winH - f32(fsb.WORLD_H) * scale) * 0.5},
+			target   = {0, 0},
+			zoom     = scale,
+		}
+
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.Color{14, 16, 22, 255})
 
+		rl.BeginMode2D(cam)
 		draw_forest(f, n)
+		rl.EndMode2D()
 
 		rl.DrawText(
 			rl.TextFormat("Mojo GPU  ->  Dagr SharedBuffer (mmap, double_buffer)  ->  Odin raylib"),
