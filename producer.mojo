@@ -102,11 +102,11 @@ def write_branch(f: Forest, g: Int, time: Float32):
 def set_headers(f: Forest) raises:
     # count + array lengths — constant every frame; the geometry is what changes.
     f.set_count(UInt32(TOTAL))
-    f.set_x0_len(UInt16(TOTAL))
-    f.set_y0_len(UInt16(TOTAL))
-    f.set_x1_len(UInt16(TOTAL))
-    f.set_y1_len(UInt16(TOTAL))
-    f.set_depth_len(UInt16(TOTAL))
+    f.set_x0_len(UInt32(TOTAL))
+    f.set_y0_len(UInt32(TOTAL))
+    f.set_x1_len(UInt32(TOTAL))
+    f.set_y1_len(UInt32(TOTAL))
+    f.set_depth_len(UInt32(TOTAL))
 
 
 # ── GPU kernel: one thread per branch ─────────────────────────────────────────

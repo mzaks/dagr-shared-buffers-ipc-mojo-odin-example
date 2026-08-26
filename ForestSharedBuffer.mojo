@@ -7,17 +7,17 @@ from std.memory.alloc import unsafe_alloc
 
 from std.atomic import Atomic, fence
 
-comptime BYTE_SIZE = 626944
+comptime BYTE_SIZE = 6684928
 comptime REGION_ALIGN = 64
 comptime ROOT_OFFSET = 64
 
 # Schema constants (pure API — not stored in the buffer).
-comptime TREES = 3
-comptime TREE_DEPTH = 12
-comptime SEG_CAP = 12288
-comptime WORLD_W = 1280.0
-comptime WORLD_H = 800.0
-comptime L0 = 150.0
+comptime TREES = 8
+comptime TREE_DEPTH = 14
+comptime SEG_CAP = 131072
+comptime WORLD_W = 1920.0
+comptime WORLD_H = 1000.0
+comptime L0 = 160.0
 comptime RATIO = 0.74
 comptime THETA = 0.4
 comptime WIND = 0.06
@@ -34,47 +34,47 @@ struct Forest(Copyable, Movable):
         return Forest(ptr, ROOT_OFFSET)
     @always_inline
     def count(self) -> UInt32:
-        return (self.ptr.unsafe_offset(self.base + 208896)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 2228224)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
     def set_count(self, v: UInt32):
-        (self.ptr.unsafe_offset(self.base + 208896)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 2228224)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](v)
     @always_inline
     def frame(self) -> UInt32:
-        return (self.ptr.unsafe_offset(self.base + 208900)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 2228228)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
     def set_frame(self, v: UInt32):
-        (self.ptr.unsafe_offset(self.base + 208900)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 2228228)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](v)
     @always_inline
-    def x0_len(self) -> UInt16:
-        return (self.ptr.unsafe_offset(self.base + 208904)).unsafe_bitcast[UInt16]().unsafe_load[alignment=1]()
+    def x0_len(self) -> UInt32:
+        return (self.ptr.unsafe_offset(self.base + 2228232)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
-    def set_x0_len(self, n: UInt16) raises:
-        if Int(n) > 12288:
-            raise Error("x0 length exceeds capacity 12288")
-        (self.ptr.unsafe_offset(self.base + 208904)).unsafe_bitcast[UInt16]().unsafe_store[alignment=1](n)
+    def set_x0_len(self, n: UInt32) raises:
+        if Int(n) > 131072:
+            raise Error("x0 length exceeds capacity 131072")
+        (self.ptr.unsafe_offset(self.base + 2228232)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](n)
     @always_inline
     def x0(self, i: Int) raises -> Float32:
-        if i < 0 or i >= 12288:
-            raise Error("x0: index out of range [0, 12288)")
+        if i < 0 or i >= 131072:
+            raise Error("x0: index out of range [0, 131072)")
         return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def x0_unchecked(self, i: Int) -> Float32:
         return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def x0_at[i: Int](self) -> Float32:
-        comptime assert i >= 0 and i < 12288, "x0: index out of range [0, 12288)"
+        comptime assert i >= 0 and i < 131072, "x0: index out of range [0, 131072)"
         return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def set_x0(self, i: Int, v: Float32) raises:
-        if i < 0 or i >= 12288:
-            raise Error("x0: index out of range [0, 12288)")
+        if i < 0 or i >= 131072:
+            raise Error("x0: index out of range [0, 131072)")
         (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_x0_unchecked(self, i: Int, v: Float32):
         (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_x0_at[i: Int](self, v: Float32):
-        comptime assert i >= 0 and i < 12288, "x0: index out of range [0, 12288)"
+        comptime assert i >= 0 and i < 131072, "x0: index out of range [0, 131072)"
         (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def x0_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
@@ -82,224 +82,224 @@ struct Forest(Copyable, Movable):
         return (self.ptr.unsafe_offset(self.base + 0)).unsafe_bitcast[Float32]()
     @always_inline
     def x0_load[w: Int](self, i: Int) raises -> SIMD[DType.float32, w]:
-        if i < 0 or i + w > 12288:
-            raise Error("x0: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("x0: SIMD range [i, i+w) out of bounds [0, 131072)")
         return (self.x0_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def x0_load_unchecked[w: Int](self, i: Int) -> SIMD[DType.float32, w]:
         return (self.x0_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def x0_store[w: Int](self, i: Int, v: SIMD[DType.float32, w]) raises:
-        if i < 0 or i + w > 12288:
-            raise Error("x0: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("x0: SIMD range [i, i+w) out of bounds [0, 131072)")
         (self.x0_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
     def x0_store_unchecked[w: Int](self, i: Int, v: SIMD[DType.float32, w]):
         (self.x0_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
-    def y0_len(self) -> UInt16:
-        return (self.ptr.unsafe_offset(self.base + 208906)).unsafe_bitcast[UInt16]().unsafe_load[alignment=1]()
+    def y0_len(self) -> UInt32:
+        return (self.ptr.unsafe_offset(self.base + 2228236)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
-    def set_y0_len(self, n: UInt16) raises:
-        if Int(n) > 12288:
-            raise Error("y0 length exceeds capacity 12288")
-        (self.ptr.unsafe_offset(self.base + 208906)).unsafe_bitcast[UInt16]().unsafe_store[alignment=1](n)
+    def set_y0_len(self, n: UInt32) raises:
+        if Int(n) > 131072:
+            raise Error("y0 length exceeds capacity 131072")
+        (self.ptr.unsafe_offset(self.base + 2228236)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](n)
     @always_inline
     def y0(self, i: Int) raises -> Float32:
-        if i < 0 or i >= 12288:
-            raise Error("y0: index out of range [0, 12288)")
-        return (self.ptr.unsafe_offset(self.base + 49152 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        if i < 0 or i >= 131072:
+            raise Error("y0: index out of range [0, 131072)")
+        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def y0_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 49152 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def y0_at[i: Int](self) -> Float32:
-        comptime assert i >= 0 and i < 12288, "y0: index out of range [0, 12288)"
-        return (self.ptr.unsafe_offset(self.base + 49152 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        comptime assert i >= 0 and i < 131072, "y0: index out of range [0, 131072)"
+        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def set_y0(self, i: Int, v: Float32) raises:
-        if i < 0 or i >= 12288:
-            raise Error("y0: index out of range [0, 12288)")
-        (self.ptr.unsafe_offset(self.base + 49152 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        if i < 0 or i >= 131072:
+            raise Error("y0: index out of range [0, 131072)")
+        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_y0_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 49152 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_y0_at[i: Int](self, v: Float32):
-        comptime assert i >= 0 and i < 12288, "y0: index out of range [0, 12288)"
-        (self.ptr.unsafe_offset(self.base + 49152 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        comptime assert i >= 0 and i < 131072, "y0: index out of range [0, 131072)"
+        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def y0_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
-        return (self.ptr.unsafe_offset(self.base + 49152)).unsafe_bitcast[Float32]()
+        return (self.ptr.unsafe_offset(self.base + 524288)).unsafe_bitcast[Float32]()
     @always_inline
     def y0_load[w: Int](self, i: Int) raises -> SIMD[DType.float32, w]:
-        if i < 0 or i + w > 12288:
-            raise Error("y0: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("y0: SIMD range [i, i+w) out of bounds [0, 131072)")
         return (self.y0_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def y0_load_unchecked[w: Int](self, i: Int) -> SIMD[DType.float32, w]:
         return (self.y0_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def y0_store[w: Int](self, i: Int, v: SIMD[DType.float32, w]) raises:
-        if i < 0 or i + w > 12288:
-            raise Error("y0: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("y0: SIMD range [i, i+w) out of bounds [0, 131072)")
         (self.y0_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
     def y0_store_unchecked[w: Int](self, i: Int, v: SIMD[DType.float32, w]):
         (self.y0_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
-    def x1_len(self) -> UInt16:
-        return (self.ptr.unsafe_offset(self.base + 208908)).unsafe_bitcast[UInt16]().unsafe_load[alignment=1]()
+    def x1_len(self) -> UInt32:
+        return (self.ptr.unsafe_offset(self.base + 2228240)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
-    def set_x1_len(self, n: UInt16) raises:
-        if Int(n) > 12288:
-            raise Error("x1 length exceeds capacity 12288")
-        (self.ptr.unsafe_offset(self.base + 208908)).unsafe_bitcast[UInt16]().unsafe_store[alignment=1](n)
+    def set_x1_len(self, n: UInt32) raises:
+        if Int(n) > 131072:
+            raise Error("x1 length exceeds capacity 131072")
+        (self.ptr.unsafe_offset(self.base + 2228240)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](n)
     @always_inline
     def x1(self, i: Int) raises -> Float32:
-        if i < 0 or i >= 12288:
-            raise Error("x1: index out of range [0, 12288)")
-        return (self.ptr.unsafe_offset(self.base + 98304 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        if i < 0 or i >= 131072:
+            raise Error("x1: index out of range [0, 131072)")
+        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def x1_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 98304 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def x1_at[i: Int](self) -> Float32:
-        comptime assert i >= 0 and i < 12288, "x1: index out of range [0, 12288)"
-        return (self.ptr.unsafe_offset(self.base + 98304 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        comptime assert i >= 0 and i < 131072, "x1: index out of range [0, 131072)"
+        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def set_x1(self, i: Int, v: Float32) raises:
-        if i < 0 or i >= 12288:
-            raise Error("x1: index out of range [0, 12288)")
-        (self.ptr.unsafe_offset(self.base + 98304 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        if i < 0 or i >= 131072:
+            raise Error("x1: index out of range [0, 131072)")
+        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_x1_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 98304 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_x1_at[i: Int](self, v: Float32):
-        comptime assert i >= 0 and i < 12288, "x1: index out of range [0, 12288)"
-        (self.ptr.unsafe_offset(self.base + 98304 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        comptime assert i >= 0 and i < 131072, "x1: index out of range [0, 131072)"
+        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def x1_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
-        return (self.ptr.unsafe_offset(self.base + 98304)).unsafe_bitcast[Float32]()
+        return (self.ptr.unsafe_offset(self.base + 1048576)).unsafe_bitcast[Float32]()
     @always_inline
     def x1_load[w: Int](self, i: Int) raises -> SIMD[DType.float32, w]:
-        if i < 0 or i + w > 12288:
-            raise Error("x1: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("x1: SIMD range [i, i+w) out of bounds [0, 131072)")
         return (self.x1_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def x1_load_unchecked[w: Int](self, i: Int) -> SIMD[DType.float32, w]:
         return (self.x1_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def x1_store[w: Int](self, i: Int, v: SIMD[DType.float32, w]) raises:
-        if i < 0 or i + w > 12288:
-            raise Error("x1: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("x1: SIMD range [i, i+w) out of bounds [0, 131072)")
         (self.x1_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
     def x1_store_unchecked[w: Int](self, i: Int, v: SIMD[DType.float32, w]):
         (self.x1_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
-    def y1_len(self) -> UInt16:
-        return (self.ptr.unsafe_offset(self.base + 208910)).unsafe_bitcast[UInt16]().unsafe_load[alignment=1]()
+    def y1_len(self) -> UInt32:
+        return (self.ptr.unsafe_offset(self.base + 2228244)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
-    def set_y1_len(self, n: UInt16) raises:
-        if Int(n) > 12288:
-            raise Error("y1 length exceeds capacity 12288")
-        (self.ptr.unsafe_offset(self.base + 208910)).unsafe_bitcast[UInt16]().unsafe_store[alignment=1](n)
+    def set_y1_len(self, n: UInt32) raises:
+        if Int(n) > 131072:
+            raise Error("y1 length exceeds capacity 131072")
+        (self.ptr.unsafe_offset(self.base + 2228244)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](n)
     @always_inline
     def y1(self, i: Int) raises -> Float32:
-        if i < 0 or i >= 12288:
-            raise Error("y1: index out of range [0, 12288)")
-        return (self.ptr.unsafe_offset(self.base + 147456 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        if i < 0 or i >= 131072:
+            raise Error("y1: index out of range [0, 131072)")
+        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def y1_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 147456 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def y1_at[i: Int](self) -> Float32:
-        comptime assert i >= 0 and i < 12288, "y1: index out of range [0, 12288)"
-        return (self.ptr.unsafe_offset(self.base + 147456 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        comptime assert i >= 0 and i < 131072, "y1: index out of range [0, 131072)"
+        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
     @always_inline
     def set_y1(self, i: Int, v: Float32) raises:
-        if i < 0 or i >= 12288:
-            raise Error("y1: index out of range [0, 12288)")
-        (self.ptr.unsafe_offset(self.base + 147456 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        if i < 0 or i >= 131072:
+            raise Error("y1: index out of range [0, 131072)")
+        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_y1_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 147456 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def set_y1_at[i: Int](self, v: Float32):
-        comptime assert i >= 0 and i < 12288, "y1: index out of range [0, 12288)"
-        (self.ptr.unsafe_offset(self.base + 147456 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        comptime assert i >= 0 and i < 131072, "y1: index out of range [0, 131072)"
+        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
     @always_inline
     def y1_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
-        return (self.ptr.unsafe_offset(self.base + 147456)).unsafe_bitcast[Float32]()
+        return (self.ptr.unsafe_offset(self.base + 1572864)).unsafe_bitcast[Float32]()
     @always_inline
     def y1_load[w: Int](self, i: Int) raises -> SIMD[DType.float32, w]:
-        if i < 0 or i + w > 12288:
-            raise Error("y1: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("y1: SIMD range [i, i+w) out of bounds [0, 131072)")
         return (self.y1_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def y1_load_unchecked[w: Int](self, i: Int) -> SIMD[DType.float32, w]:
         return (self.y1_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def y1_store[w: Int](self, i: Int, v: SIMD[DType.float32, w]) raises:
-        if i < 0 or i + w > 12288:
-            raise Error("y1: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("y1: SIMD range [i, i+w) out of bounds [0, 131072)")
         (self.y1_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
     def y1_store_unchecked[w: Int](self, i: Int, v: SIMD[DType.float32, w]):
         (self.y1_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
-    def depth_len(self) -> UInt16:
-        return (self.ptr.unsafe_offset(self.base + 208912)).unsafe_bitcast[UInt16]().unsafe_load[alignment=1]()
+    def depth_len(self) -> UInt32:
+        return (self.ptr.unsafe_offset(self.base + 2228248)).unsafe_bitcast[UInt32]().unsafe_load[alignment=1]()
     @always_inline
-    def set_depth_len(self, n: UInt16) raises:
-        if Int(n) > 12288:
-            raise Error("depth length exceeds capacity 12288")
-        (self.ptr.unsafe_offset(self.base + 208912)).unsafe_bitcast[UInt16]().unsafe_store[alignment=1](n)
+    def set_depth_len(self, n: UInt32) raises:
+        if Int(n) > 131072:
+            raise Error("depth length exceeds capacity 131072")
+        (self.ptr.unsafe_offset(self.base + 2228248)).unsafe_bitcast[UInt32]().unsafe_store[alignment=1](n)
     @always_inline
     def depth(self, i: Int) raises -> UInt8:
-        if i < 0 or i >= 12288:
-            raise Error("depth: index out of range [0, 12288)")
-        return (self.ptr.unsafe_offset(self.base + 196608 + i * 1)).unsafe_bitcast[UInt8]().unsafe_load[alignment=1]()
+        if i < 0 or i >= 131072:
+            raise Error("depth: index out of range [0, 131072)")
+        return (self.ptr.unsafe_offset(self.base + 2097152 + i * 1)).unsafe_bitcast[UInt8]().unsafe_load[alignment=1]()
     @always_inline
     def depth_unchecked(self, i: Int) -> UInt8:
-        return (self.ptr.unsafe_offset(self.base + 196608 + i * 1)).unsafe_bitcast[UInt8]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 2097152 + i * 1)).unsafe_bitcast[UInt8]().unsafe_load[alignment=1]()
     @always_inline
     def depth_at[i: Int](self) -> UInt8:
-        comptime assert i >= 0 and i < 12288, "depth: index out of range [0, 12288)"
-        return (self.ptr.unsafe_offset(self.base + 196608 + i * 1)).unsafe_bitcast[UInt8]().unsafe_load[alignment=1]()
+        comptime assert i >= 0 and i < 131072, "depth: index out of range [0, 131072)"
+        return (self.ptr.unsafe_offset(self.base + 2097152 + i * 1)).unsafe_bitcast[UInt8]().unsafe_load[alignment=1]()
     @always_inline
     def set_depth(self, i: Int, v: UInt8) raises:
-        if i < 0 or i >= 12288:
-            raise Error("depth: index out of range [0, 12288)")
-        (self.ptr.unsafe_offset(self.base + 196608 + i * 1)).unsafe_bitcast[UInt8]().unsafe_store[alignment=1](v)
+        if i < 0 or i >= 131072:
+            raise Error("depth: index out of range [0, 131072)")
+        (self.ptr.unsafe_offset(self.base + 2097152 + i * 1)).unsafe_bitcast[UInt8]().unsafe_store[alignment=1](v)
     @always_inline
     def set_depth_unchecked(self, i: Int, v: UInt8):
-        (self.ptr.unsafe_offset(self.base + 196608 + i * 1)).unsafe_bitcast[UInt8]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 2097152 + i * 1)).unsafe_bitcast[UInt8]().unsafe_store[alignment=1](v)
     @always_inline
     def set_depth_at[i: Int](self, v: UInt8):
-        comptime assert i >= 0 and i < 12288, "depth: index out of range [0, 12288)"
-        (self.ptr.unsafe_offset(self.base + 196608 + i * 1)).unsafe_bitcast[UInt8]().unsafe_store[alignment=1](v)
+        comptime assert i >= 0 and i < 131072, "depth: index out of range [0, 131072)"
+        (self.ptr.unsafe_offset(self.base + 2097152 + i * 1)).unsafe_bitcast[UInt8]().unsafe_store[alignment=1](v)
     @always_inline
     def depth_ptr(self) -> Pointer[UInt8, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
-        return (self.ptr.unsafe_offset(self.base + 196608)).unsafe_bitcast[UInt8]()
+        return (self.ptr.unsafe_offset(self.base + 2097152)).unsafe_bitcast[UInt8]()
     @always_inline
     def depth_load[w: Int](self, i: Int) raises -> SIMD[DType.uint8, w]:
-        if i < 0 or i + w > 12288:
-            raise Error("depth: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("depth: SIMD range [i, i+w) out of bounds [0, 131072)")
         return (self.depth_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def depth_load_unchecked[w: Int](self, i: Int) -> SIMD[DType.uint8, w]:
         return (self.depth_ptr().unsafe_offset(i)).unsafe_load[width=w, alignment=64]()
     @always_inline
     def depth_store[w: Int](self, i: Int, v: SIMD[DType.uint8, w]) raises:
-        if i < 0 or i + w > 12288:
-            raise Error("depth: SIMD range [i, i+w) out of bounds [0, 12288)")
+        if i < 0 or i + w > 131072:
+            raise Error("depth: SIMD range [i, i+w) out of bounds [0, 131072)")
         (self.depth_ptr().unsafe_offset(i)).unsafe_store[width=w, alignment=64](v)
     @always_inline
     def depth_store_unchecked[w: Int](self, i: Int, v: SIMD[DType.uint8, w]):
@@ -310,7 +310,7 @@ def allocate() -> Pointer[UInt8, MutUntrackedOrigin]:
     unsafe_memset_zero(p, BYTE_SIZE)
     return p
 
-comptime NODE_SIZE = 208960
+comptime NODE_SIZE = 2228288
 
 @fieldwise_init
 struct Producer(Copyable, Movable, ImplicitlyCopyable):

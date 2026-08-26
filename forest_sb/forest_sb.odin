@@ -6,16 +6,16 @@ package forest_sb
 import "core:mem"
 import "base:intrinsics"
 
-BYTE_SIZE :: 626944
+BYTE_SIZE :: 6684928
 REGION_ALIGN :: 64
 ROOT_OFFSET :: 64
 // Schema constants (pure API — not stored in the buffer).
-TREES :: 3
-TREE_DEPTH :: 12
-SEG_CAP :: 12288
-WORLD_W :: 1280.0
-WORLD_H :: 800.0
-L0 :: 150.0
+TREES :: 8
+TREE_DEPTH :: 14
+SEG_CAP :: 131072
+WORLD_W :: 1920.0
+WORLD_H :: 1000.0
+L0 :: 160.0
 RATIO :: 0.74
 THETA :: 0.4
 WIND :: 0.06
@@ -32,74 +32,74 @@ _f32_to_bf16 :: proc(x: f32) -> u16 {
 
 Forest :: struct { data: [^]u8, base: int }
 wrap :: proc(p: [^]u8) -> Forest { return Forest{data = p, base = ROOT_OFFSET} }
-forest_count :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 208896]))) }
-set_forest_count :: proc(o: Forest, v: u32) { intrinsics.unaligned_store((^u32le)(&o.data[o.base + 208896]), u32le(v)) }
-forest_frame :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 208900]))) }
-set_forest_frame :: proc(o: Forest, v: u32) { intrinsics.unaligned_store((^u32le)(&o.data[o.base + 208900]), u32le(v)) }
-forest_x0_len :: proc(o: Forest) -> u16 { return u16(intrinsics.unaligned_load((^u16le)(&o.data[o.base + 208904]))) }
-set_forest_x0_len :: proc(o: Forest, n: u16) {
-	assert(int(n) <= 12288, "forest_x0 length exceeds capacity 12288")
-	intrinsics.unaligned_store((^u16le)(&o.data[o.base + 208904]), u16le(n))
+forest_count :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228224]))) }
+set_forest_count :: proc(o: Forest, v: u32) { intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228224]), u32le(v)) }
+forest_frame :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228228]))) }
+set_forest_frame :: proc(o: Forest, v: u32) { intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228228]), u32le(v)) }
+forest_x0_len :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228232]))) }
+set_forest_x0_len :: proc(o: Forest, n: u32) {
+	assert(int(n) <= 131072, "forest_x0 length exceeds capacity 131072")
+	intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228232]), u32le(n))
 }
 forest_x0 :: proc(o: Forest, i: int) -> f32 {
-	assert(i >= 0 && i < 12288, "forest_x0: index out of range [0, 12288)")
+	assert(i >= 0 && i < 131072, "forest_x0: index out of range [0, 131072)")
 	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 0 + i * 4])))
 }
 set_forest_x0 :: proc(o: Forest, i: int, v: f32) {
-	assert(i >= 0 && i < 12288, "forest_x0: index out of range [0, 12288)")
+	assert(i >= 0 && i < 131072, "forest_x0: index out of range [0, 131072)")
 	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 0 + i * 4]), f32le(v))
 }
-forest_y0_len :: proc(o: Forest) -> u16 { return u16(intrinsics.unaligned_load((^u16le)(&o.data[o.base + 208906]))) }
-set_forest_y0_len :: proc(o: Forest, n: u16) {
-	assert(int(n) <= 12288, "forest_y0 length exceeds capacity 12288")
-	intrinsics.unaligned_store((^u16le)(&o.data[o.base + 208906]), u16le(n))
+forest_y0_len :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228236]))) }
+set_forest_y0_len :: proc(o: Forest, n: u32) {
+	assert(int(n) <= 131072, "forest_y0 length exceeds capacity 131072")
+	intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228236]), u32le(n))
 }
 forest_y0 :: proc(o: Forest, i: int) -> f32 {
-	assert(i >= 0 && i < 12288, "forest_y0: index out of range [0, 12288)")
-	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 49152 + i * 4])))
+	assert(i >= 0 && i < 131072, "forest_y0: index out of range [0, 131072)")
+	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 524288 + i * 4])))
 }
 set_forest_y0 :: proc(o: Forest, i: int, v: f32) {
-	assert(i >= 0 && i < 12288, "forest_y0: index out of range [0, 12288)")
-	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 49152 + i * 4]), f32le(v))
+	assert(i >= 0 && i < 131072, "forest_y0: index out of range [0, 131072)")
+	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 524288 + i * 4]), f32le(v))
 }
-forest_x1_len :: proc(o: Forest) -> u16 { return u16(intrinsics.unaligned_load((^u16le)(&o.data[o.base + 208908]))) }
-set_forest_x1_len :: proc(o: Forest, n: u16) {
-	assert(int(n) <= 12288, "forest_x1 length exceeds capacity 12288")
-	intrinsics.unaligned_store((^u16le)(&o.data[o.base + 208908]), u16le(n))
+forest_x1_len :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228240]))) }
+set_forest_x1_len :: proc(o: Forest, n: u32) {
+	assert(int(n) <= 131072, "forest_x1 length exceeds capacity 131072")
+	intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228240]), u32le(n))
 }
 forest_x1 :: proc(o: Forest, i: int) -> f32 {
-	assert(i >= 0 && i < 12288, "forest_x1: index out of range [0, 12288)")
-	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 98304 + i * 4])))
+	assert(i >= 0 && i < 131072, "forest_x1: index out of range [0, 131072)")
+	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 1048576 + i * 4])))
 }
 set_forest_x1 :: proc(o: Forest, i: int, v: f32) {
-	assert(i >= 0 && i < 12288, "forest_x1: index out of range [0, 12288)")
-	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 98304 + i * 4]), f32le(v))
+	assert(i >= 0 && i < 131072, "forest_x1: index out of range [0, 131072)")
+	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 1048576 + i * 4]), f32le(v))
 }
-forest_y1_len :: proc(o: Forest) -> u16 { return u16(intrinsics.unaligned_load((^u16le)(&o.data[o.base + 208910]))) }
-set_forest_y1_len :: proc(o: Forest, n: u16) {
-	assert(int(n) <= 12288, "forest_y1 length exceeds capacity 12288")
-	intrinsics.unaligned_store((^u16le)(&o.data[o.base + 208910]), u16le(n))
+forest_y1_len :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228244]))) }
+set_forest_y1_len :: proc(o: Forest, n: u32) {
+	assert(int(n) <= 131072, "forest_y1 length exceeds capacity 131072")
+	intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228244]), u32le(n))
 }
 forest_y1 :: proc(o: Forest, i: int) -> f32 {
-	assert(i >= 0 && i < 12288, "forest_y1: index out of range [0, 12288)")
-	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 147456 + i * 4])))
+	assert(i >= 0 && i < 131072, "forest_y1: index out of range [0, 131072)")
+	return f32(intrinsics.unaligned_load((^f32le)(&o.data[o.base + 1572864 + i * 4])))
 }
 set_forest_y1 :: proc(o: Forest, i: int, v: f32) {
-	assert(i >= 0 && i < 12288, "forest_y1: index out of range [0, 12288)")
-	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 147456 + i * 4]), f32le(v))
+	assert(i >= 0 && i < 131072, "forest_y1: index out of range [0, 131072)")
+	intrinsics.unaligned_store((^f32le)(&o.data[o.base + 1572864 + i * 4]), f32le(v))
 }
-forest_depth_len :: proc(o: Forest) -> u16 { return u16(intrinsics.unaligned_load((^u16le)(&o.data[o.base + 208912]))) }
-set_forest_depth_len :: proc(o: Forest, n: u16) {
-	assert(int(n) <= 12288, "forest_depth length exceeds capacity 12288")
-	intrinsics.unaligned_store((^u16le)(&o.data[o.base + 208912]), u16le(n))
+forest_depth_len :: proc(o: Forest) -> u32 { return u32(intrinsics.unaligned_load((^u32le)(&o.data[o.base + 2228248]))) }
+set_forest_depth_len :: proc(o: Forest, n: u32) {
+	assert(int(n) <= 131072, "forest_depth length exceeds capacity 131072")
+	intrinsics.unaligned_store((^u32le)(&o.data[o.base + 2228248]), u32le(n))
 }
 forest_depth :: proc(o: Forest, i: int) -> u8 {
-	assert(i >= 0 && i < 12288, "forest_depth: index out of range [0, 12288)")
-	return u8(intrinsics.unaligned_load((^u8)(&o.data[o.base + 196608 + i * 1])))
+	assert(i >= 0 && i < 131072, "forest_depth: index out of range [0, 131072)")
+	return u8(intrinsics.unaligned_load((^u8)(&o.data[o.base + 2097152 + i * 1])))
 }
 set_forest_depth :: proc(o: Forest, i: int, v: u8) {
-	assert(i >= 0 && i < 12288, "forest_depth: index out of range [0, 12288)")
-	intrinsics.unaligned_store((^u8)(&o.data[o.base + 196608 + i * 1]), u8(v))
+	assert(i >= 0 && i < 131072, "forest_depth: index out of range [0, 131072)")
+	intrinsics.unaligned_store((^u8)(&o.data[o.base + 2097152 + i * 1]), u8(v))
 }
 
 allocate :: proc() -> [^]u8 {
@@ -109,7 +109,7 @@ allocate :: proc() -> [^]u8 {
 }
 free_region :: proc(p: [^]u8) { free(p) }
 
-NODE_SIZE :: 208960
+NODE_SIZE :: 2228288
 
 Producer :: struct { ptr: [^]u8, input: u32 }
 producer_from_raw :: proc(p: [^]u8) -> Producer { return Producer{p, 1} }

@@ -14,3 +14,6 @@ dagr.lock.json
 # NOTE: the generated SharedBuffer overlays (ForestSharedBuffer.mojo and
 # forest_sb/) are intentionally COMMITTED — the Dagr CLI that emits them is in
 # private beta, so shipping them lets anyone build and run the demo.
+
+# Dagr CLI receipt-history archive
+.dagr/

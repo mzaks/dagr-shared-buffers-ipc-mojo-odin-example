@@ -52,8 +52,8 @@ A fractal tree is usually built by recursion, but here every branch is computed
 it into a root-to-branch path (the bits of the index pick left/right at each level),
 and walks that path to a world transform. Add a time-varying wind term that grows
 with depth and the whole forest sways coherently — the trunks stay put, the canopy
-moves. A forest of 3 trees at depth 12 is **12,285 line segments**, recomputed every
-frame on the GPU.
+moves. A forest of 8 trees at depth 14 is **131,064 line segments**, recomputed every
+single frame.
 
 ## Run it
 
@@ -76,6 +76,19 @@ pixi run demo gpu     # force GPU     (or: ./run_demo.sh gpu)
 
 (CPU and GPU output match to sub-pixel precision — max ~6e-5 px over the whole
 forest.)
+
+At 131,064 segments the two backends pull apart (measured per-frame compute on an
+M4 Max, sleep removed):
+
+| Backend | per frame | throughput |
+|---|---|---|
+| **CPU** (single-threaded loop) | ~8.6 ms | ~116 fps |
+| **GPU** (kernel + copy back to the slot) | ~0.44 ms | ~2,280 fps |
+
+So the GPU is **~19×** faster here — and both still clear the demo's 60 fps. The
+device→host copy is ~0.2 ms of the GPU's frame; at this scale it's a rounding error
+next to the compute the GPU saves. (At the original 12k segments the gap was only
+~1.9× — the bigger the forest, the more the parallel GPU pulls ahead.)
 
 **Requirements**
 
