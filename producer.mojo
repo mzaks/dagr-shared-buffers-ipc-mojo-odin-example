@@ -33,23 +33,9 @@ comptime BRANCHES = (1 << TREE_DEPTH) - 1        # 4095 branches per tree
 comptime TOTAL    = TREES * BRANCHES             # 12285 segments (<= SEG_CAP)
 comptime HALF_PI  = 1.5707963                    # pointing straight up
 
-# macOS open/mmap constants
-comptime O_RDWR = 0x0002
-comptime O_CREAT = 0x0200
-comptime PROT_RW = 0x3
-comptime MAP_SHARED = 0x1
-comptime PTR = Pointer[UInt8, MutUntrackedOrigin]
-
-
-def map_shared(path: String, size: Int) -> PTR:
-    var fd = external_call["open", Int32](
-        path.unsafe_ptr(), Int32(O_RDWR | O_CREAT), Int32(0o666))
-    _ = external_call["fchmod", Int32](fd, Int32(0o666))       # let the renderer (same user) open it
-    _ = external_call["ftruncate", Int32](fd, Int64(size))
-    var addr = external_call["mmap", PTR](
-        Int(0), size, Int32(PROT_RW), Int32(MAP_SHARED), fd, Int64(0))
-    _ = external_call["close", Int32](fd)
-    return addr
+# Portable POSIX mmap wrapper (macOS + Linux). `PTR` is the raw overlay pointer
+# type; `map_shared_file` create-or-opens the region and maps it MAP_SHARED.
+from posix_mmap import PTR, map_shared_file
 
 
 # ── one branch, computed from its index (shared by the GPU and CPU paths) ─────
@@ -196,7 +182,7 @@ def _arg_mode() -> String:
 def main() raises:
     var mode = _arg_mode()
     var frames = _arg_frames()
-    var region = map_shared(String(PATH), BYTE_SIZE)
+    var region = map_shared_file(String(PATH), BYTE_SIZE)
     var producer = Producer.from_raw(region)
     print("producer: forest of", TREES, "trees, depth", TREE_DEPTH, "=", TOTAL,
           "segments; region", BYTE_SIZE, "bytes at", PATH)
