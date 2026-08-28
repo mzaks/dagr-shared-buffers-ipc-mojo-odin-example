@@ -83,31 +83,71 @@ present and falls back to the **CPU** otherwise — the exact same per-branch fu
 runs on a GPU thread or in a host loop. You can also force a backend:
 
 ```bash
-pixi run demo cpu     # force CPU     (or: ./run_demo.sh cpu)
-pixi run demo gpu     # force GPU     (or: ./run_demo.sh gpu)
+pixi run demo cpu       # force CPU                    (or: ./run_demo.sh cpu)
+pixi run demo gpu       # force GPU                    (or: ./run_demo.sh gpu)
+pixi run demo gpu-copy  # force the copying GPU path   (or: ./run_demo.sh gpu-copy)
 ```
 
-(CPU and GPU output match to sub-pixel precision — max ~6e-5 px over the whole
-forest.)
+(CPU and GPU output match to sub-pixel precision — max ~7e-4 px over the whole
+forest. The two GPU backends are bit-identical to each other.)
 
-At ~131k segments the two backends pull apart (measured per-frame compute on an
-M4 Max, sleep removed):
+At ~131k segments the backends pull apart (measured per-frame compute on an M4 Max,
+sleep removed):
 
 | Backend | per frame | throughput |
 |---|---|---|
 | **CPU** (single-threaded loop) | ~8.6 ms | ~116 fps |
 | **GPU** (kernel + copy back to the slot) | ~0.44 ms | ~2,280 fps |
 
-So the GPU is **~19×** faster here — and both still clear the demo's 60 fps. The
-device→host copy is ~0.2 ms of the GPU's frame; at this scale it's a rounding error
-next to the compute the GPU saves. (At the original 12k segments the gap was only
-~1.9× — the bigger the forest, the more the parallel GPU pulls ahead.)
+So the GPU is **~19×** faster here — and both still clear the demo's 60 fps. (At the
+original 12k segments the gap was only ~1.9× — the bigger the forest, the more the
+parallel GPU pulls ahead.)
+
+### Zero-copy on NVIDIA: the GPU writes the shared region itself
+
+A discrete NVIDIA GPU does not have to stage the frame in VRAM first. When the
+driver reports `CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS`, a kernel can
+dereference an ordinary host virtual address — **including a file-backed
+`MAP_SHARED` mapping**. So the producer hands the whole mmap'd region to the device
+as a non-owning `HostBuffer` and the kernel writes each branch **straight into the
+off-screen slot the Odin renderer will read**. No device buffer, no H2D, no D2H, no
+memcpy — the bytes are written once, by the GPU, in the place both processes share.
+
+The producer picks this automatically and falls back to the copying path (`gpu-copy`)
+on any device that cannot address host memory — Metal, or a CUDA device without
+pageable access — so the demo still runs everywhere.
+
+Measured on an RTX 4050 Laptop GPU (Linux, sleep removed, per-frame slope over
+200→1200 frames):
+
+| Backend | per frame | throughput |
+|---|---|---|
+| **CPU** (single-threaded loop) | ~12.96 ms | ~77 fps |
+| **GPU + copy** (kernel into VRAM, copy to the slot) | ~0.43 ms | ~2,350 fps |
+| **GPU zero-copy** (kernel writes the slot directly) | **~0.17 ms** | **~5,780 fps** |
+
+**One catch worth knowing about.** Zero-copy only pays off if the kernel's stores are
+*naturally aligned*. The generated overlay's `set_*_unchecked()` accessors emit
+`alignment=1` stores — they have to serve any field, packed or not — and while VRAM
+barely notices (263 vs 272 GB/s), writing over PCIe does: an `alignment=1` store
+lowers to per-byte stores, and each byte becomes its own PCIe transaction.
+
+| Kernel stores, 2.2 MB node | to device VRAM | to host memory |
+|---|---|---|
+| `alignment=1` (`set_*_unchecked`) | 263 GB/s | **0.03 GB/s** |
+| naturally aligned (`*_ptr()`) | 272 GB/s | **12.9 GB/s** |
+
+That is a 430× cliff, and it is the difference between zero-copy being 2.5× faster
+than copying and being 200× slower. So `write_branch()` stores through the overlay's
+64-byte-aligned `x0_ptr()` / `y0_ptr()` / … accessors instead. Same bytes, same
+layout, same results — the CPU and copying paths just get it for free.
 
 **Requirements**
 
 - The **Mojo / MAX toolchain**, via [pixi](https://pixi.sh) — see [`pixi.toml`](pixi.toml).
-- An **Apple Silicon GPU** for the GPU path (Mojo's Metal stack); optional — the
-  producer runs on the CPU without one.
+- A **GPU** for the GPU path — an **NVIDIA GPU** (CUDA; gets the zero-copy backend)
+  or an **Apple Silicon GPU** (Mojo's Metal stack; gets the copying backend).
+  Optional — the producer runs on the CPU without one.
 - The **[Odin](https://odin-lang.org) compiler**, which bundles `vendor:raylib` (no
   separate raylib install needed).
 
@@ -120,16 +160,19 @@ next to the compute the GPU saves. (At the original 12k segments the gap was onl
         └────────────► forest_sb/                ← Odin overlay package (renderer)
 
   producer.mojo  ──GPU or CPU──►  branches ──►  ┌─────────────────────┐
-                                                │  mmap'd region      │
-                        commit() atomic ───────►│  [ctrl][slot0..2]   │
-                                                └─────────┬───────────┘
+                    (on NVIDIA the kernel     │  mmap'd region      │
+                     writes these slots ─────►│  [ctrl][slot0..2]   │
+                     directly — no copy)      │                     │
+                        commit() atomic ─────►│                     │
+                                              └─────────┬───────────┘
   renderer.odin  ◄──raylib──  latest frame  ◄──consumer_read()──┘
 ```
 
 - [`producer.mojo`](producer.mojo) — `mmap`s the region and each frame fills an
   off-screen slot with the fractal forest (on the **GPU** via a one-thread-per-branch
-  kernel, or the **CPU** via the same function in a host loop) and `commit()`s it
-  (one atomic exchange). Runs until stopped.
+  kernel — writing the slot directly where the device can reach host memory, else
+  into a device node that is copied over — or the **CPU** via the same function in a
+  host loop) and `commit()`s it (one atomic exchange). Runs until stopped.
 - [`renderer.odin`](renderer.odin) — `mmap`s the same region, and each frame latches
   the newest published slot and draws every branch with raylib (colour + thickness
   by depth). Trunks and major limbs are thick anti-aliased quads; the ~130k fine

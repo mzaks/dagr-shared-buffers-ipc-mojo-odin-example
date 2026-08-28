@@ -4,9 +4,11 @@
 #   process B (Odin, raylib) reads the newest frame and RENDERS it at 60 fps
 # Both attach to ONE mmap'd region and share a fixed layout — zero marshalling.
 #
-# Needs: an Apple Silicon GPU, the Mojo/MAX toolchain (via pixi — see pixi.toml),
-# and the Odin compiler (with its bundled vendor:raylib). Close the render window
-# (or press ESC) to end the demo; the producer is stopped automatically.
+# Needs: the Mojo/MAX toolchain (via pixi — see pixi.toml) and the Odin compiler
+# (with its bundled vendor:raylib). A GPU is optional: on NVIDIA the kernel writes
+# the shared region directly (no copy), on Apple Silicon it computes into a device
+# node and copies, and without a device it falls back to the CPU. Close the render
+# window (or press ESC) to end the demo; the producer is stopped automatically.
 set -euo pipefail
 cd "$(dirname "$0")"                         # repo root
 REGION="/tmp/dagr_forest_ipc.bin"
@@ -36,9 +38,10 @@ rm -f "$REGION"
 
 # Start the producer (process A). It creates + mmaps the region and publishes
 # frames until killed. Any args are forwarded to the producer, so:
-#   ./run_demo.sh          # auto: GPU if present, else CPU
-#   ./run_demo.sh cpu      # force the CPU backend
-#   ./run_demo.sh gpu      # force the GPU backend
+#   ./run_demo.sh           # auto: GPU if present (zero-copy where supported), else CPU
+#   ./run_demo.sh cpu       # force the CPU backend
+#   ./run_demo.sh gpu       # force the GPU backend
+#   ./run_demo.sh gpu-copy  # force the copying GPU backend (skip zero-copy)
 # (via pixi: `pixi run demo cpu`).
 echo "== launch producer (process A) =="
 pixi run ./producer "$@" &
