@@ -51,7 +51,7 @@ from posix_mmap import PTR, map_shared_file
 # Each branch is independent: reconstruct the transform for branch `g` from the bits
 # of its heap index (no recursion), apply a time-varying wind sway, and write the
 # segment through the SB overlay. The exact same function runs on a GPU thread or in
-# a host loop — the overlay's element-region accessors are pure pointer arithmetic.
+# a host loop — the overlay's `*_unchecked` accessors are pure pointer arithmetic.
 @always_inline
 def write_branch(f: Forest, g: Int, time: Float32):
     var tree = g // BRANCHES
@@ -95,21 +95,19 @@ def write_branch(f: Forest, g: Int, time: Float32):
         ln *= RATIO
         k -= 1
 
-    # Store through the overlay's `*_ptr()` accessors rather than
-    # `set_*_unchecked()`. Both land on the same bytes, but the `set_*` accessors
-    # are generated with `alignment=1` (they must serve any field, packed or not),
-    # while the element regions are 64-byte aligned — so a 4-byte-aligned store is
-    # always valid here. In VRAM the difference is noise (263 vs 272 GB/s), but a
-    # kernel writing straight into HOST memory pays for it enormously: an
-    # `alignment=1` store lowers to per-byte stores, and each one becomes its own
-    # PCIe transaction. Measured on an RTX 4050 over a 2.2 MB node:
-    # 0.03 GB/s with alignment=1 vs 12.9 GB/s naturally aligned — a 430x cliff.
-    # That cliff is the whole reason the zero-copy path below is viable.
-    f.x0_ptr().unsafe_offset(g).unsafe_store(x)
-    f.y0_ptr().unsafe_offset(g).unsafe_store(y)
-    f.x1_ptr().unsafe_offset(g).unsafe_store(x + cos(ang) * ln)
-    f.y1_ptr().unsafe_offset(g).unsafe_store(y + sin(ang) * ln)
-    f.depth_ptr().unsafe_offset(g).unsafe_store(UInt8(d))
+    # Write through the overlay's bounds-agnostic `set_*_unchecked` accessors.
+    # These arrays are `aligned(64)`, and the SharedBuffer codegen emits the
+    # field's natural alignment for aligned arrays (`alignment=4` for f32), so each
+    # store is a single aligned transaction. That is what makes the zero-copy path
+    # below viable: a GPU thread writing straight into HOST memory over PCIe would,
+    # with an `alignment=1` store, lower to per-byte transactions — measured 0.03
+    # vs 12.9 GB/s over a 2.2 MB node on an RTX 4050, a 430x cliff. The CPU and
+    # copy backends get the same aligned stores for free.
+    f.set_x0_unchecked(g, x)
+    f.set_y0_unchecked(g, y)
+    f.set_x1_unchecked(g, x + cos(ang) * ln)
+    f.set_y1_unchecked(g, y + sin(ang) * ln)
+    f.set_depth_unchecked(g, UInt8(d))
 
 
 @always_inline

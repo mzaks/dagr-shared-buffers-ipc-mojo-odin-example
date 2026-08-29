@@ -56,26 +56,26 @@ struct Forest(Copyable, Movable):
     def x0(self, i: Int) raises -> Float32:
         if i < 0 or i >= 131072:
             raise Error("x0: index out of range [0, 131072)")
-        return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def x0_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def x0_at[i: Int](self) -> Float32:
         comptime assert i >= 0 and i < 131072, "x0: index out of range [0, 131072)"
-        return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def set_x0(self, i: Int, v: Float32) raises:
         if i < 0 or i >= 131072:
             raise Error("x0: index out of range [0, 131072)")
-        (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_x0_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_x0_at[i: Int](self, v: Float32):
         comptime assert i >= 0 and i < 131072, "x0: index out of range [0, 131072)"
-        (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 0 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def x0_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
@@ -108,26 +108,26 @@ struct Forest(Copyable, Movable):
     def y0(self, i: Int) raises -> Float32:
         if i < 0 or i >= 131072:
             raise Error("y0: index out of range [0, 131072)")
-        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def y0_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def y0_at[i: Int](self) -> Float32:
         comptime assert i >= 0 and i < 131072, "y0: index out of range [0, 131072)"
-        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def set_y0(self, i: Int, v: Float32) raises:
         if i < 0 or i >= 131072:
             raise Error("y0: index out of range [0, 131072)")
-        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_y0_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_y0_at[i: Int](self, v: Float32):
         comptime assert i >= 0 and i < 131072, "y0: index out of range [0, 131072)"
-        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 524288 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def y0_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
@@ -160,26 +160,26 @@ struct Forest(Copyable, Movable):
     def x1(self, i: Int) raises -> Float32:
         if i < 0 or i >= 131072:
             raise Error("x1: index out of range [0, 131072)")
-        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def x1_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def x1_at[i: Int](self) -> Float32:
         comptime assert i >= 0 and i < 131072, "x1: index out of range [0, 131072)"
-        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def set_x1(self, i: Int, v: Float32) raises:
         if i < 0 or i >= 131072:
             raise Error("x1: index out of range [0, 131072)")
-        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_x1_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_x1_at[i: Int](self, v: Float32):
         comptime assert i >= 0 and i < 131072, "x1: index out of range [0, 131072)"
-        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1048576 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def x1_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
@@ -212,26 +212,26 @@ struct Forest(Copyable, Movable):
     def y1(self, i: Int) raises -> Float32:
         if i < 0 or i >= 131072:
             raise Error("y1: index out of range [0, 131072)")
-        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def y1_unchecked(self, i: Int) -> Float32:
-        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def y1_at[i: Int](self) -> Float32:
         comptime assert i >= 0 and i < 131072, "y1: index out of range [0, 131072)"
-        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=1]()
+        return (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_load[alignment=4]()
     @always_inline
     def set_y1(self, i: Int, v: Float32) raises:
         if i < 0 or i >= 131072:
             raise Error("y1: index out of range [0, 131072)")
-        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_y1_unchecked(self, i: Int, v: Float32):
-        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def set_y1_at[i: Int](self, v: Float32):
         comptime assert i >= 0 and i < 131072, "y1: index out of range [0, 131072)"
-        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=1](v)
+        (self.ptr.unsafe_offset(self.base + 1572864 + i * 4)).unsafe_bitcast[Float32]().unsafe_store[alignment=4](v)
     @always_inline
     def y1_ptr(self) -> Pointer[Float32, MutUntrackedOrigin]:
         # 64-byte aligned typed pointer to the element region (SIMD-ready)
