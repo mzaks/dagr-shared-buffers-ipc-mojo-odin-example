@@ -117,30 +117,46 @@ The producer picks this automatically and falls back to the copying path (`gpu-c
 on any device that cannot address host memory — Metal, or a CUDA device without
 pageable access — so the demo still runs everywhere.
 
-Measured on an RTX 4050 Laptop GPU (Linux, sleep removed, per-frame slope over
-200→1200 frames):
+Measured on an RTX 4050 Laptop GPU (Linux, sleep removed, 500 timed frames after 20
+warm-up frames, 131,056 segments = a 2.23 MB node per frame):
 
 | Backend | per frame | throughput |
 |---|---|---|
-| **CPU** (single-threaded loop) | ~12.96 ms | ~77 fps |
-| **GPU + copy** (kernel into VRAM, copy to the slot) | ~0.43 ms | ~2,350 fps |
-| **GPU zero-copy** (kernel writes the slot directly) | **~0.17 ms** | **~5,780 fps** |
+| **CPU** (single-threaded loop) | ~12.99 ms | ~77 fps |
+| **GPU + copy** (kernel into VRAM, copy to the slot) | ~0.45 ms | ~2,230 fps |
+| **GPU zero-copy** (kernel writes the slot directly) | **~0.20 ms** | **~5,100 fps** |
+
+Zero-copy is **2.3× faster than copying** and **66× faster than the CPU**. Timing the
+copying backend's two stages separately shows where that 0.25 ms goes:
+
+| `gpu-copy` stage | per frame |
+|---|---|
+| kernel + `synchronize()` (writing VRAM) | ~0.025 ms |
+| `map_to_host()` + `memcpy` into the slot | ~0.45 ms |
+
+**~95% of the copying path's frame time is data movement, not compute.** Writing to
+host memory over PCIe does make the kernel itself ~8× slower (0.20 ms vs 0.025 ms),
+but that is still far cheaper than staging the node in VRAM and paying for the
+transfer afterwards: ~11.4 GB/s written once, versus ~5 GB/s for the D2H + memcpy
+round trip.
 
 **One catch worth knowing about.** Zero-copy only pays off if the kernel's stores are
-*naturally aligned*. The generated overlay's `set_*_unchecked()` accessors emit
-`alignment=1` stores — they have to serve any field, packed or not — and while VRAM
-barely notices (263 vs 272 GB/s), writing over PCIe does: an `alignment=1` store
-lowers to per-byte stores, and each byte becomes its own PCIe transaction.
+*naturally aligned*. An `alignment=1` store lowers to per-byte stores, and over PCIe
+each byte becomes its own transaction — VRAM barely notices, host memory falls off a
+cliff:
 
 | Kernel stores, 2.2 MB node | to device VRAM | to host memory |
 |---|---|---|
-| `alignment=1` (`set_*_unchecked`) | 263 GB/s | **0.03 GB/s** |
-| naturally aligned (`*_ptr()`) | 272 GB/s | **12.9 GB/s** |
+| `alignment=1` | 263 GB/s | **0.03 GB/s** |
+| naturally aligned | 272 GB/s | **12.9 GB/s** |
 
-That is a 430× cliff, and it is the difference between zero-copy being 2.5× faster
-than copying and being 200× slower. So `write_branch()` stores through the overlay's
-64-byte-aligned `x0_ptr()` / `y0_ptr()` / … accessors instead. Same bytes, same
-layout, same results — the CPU and copying paths just get it for free.
+That 430× gap is the difference between zero-copy being ~2.3× faster than copying and
+being ~200× slower. The SharedBuffer codegen handles it: for an array declared
+`aligned(64)` it emits the field's *natural* alignment, so `set_x0_unchecked()` on an
+f32 array is an `alignment=4` store — a single aligned transaction — while packed
+scalar fields still get the conservative `alignment=1` they need. So `write_branch()`
+writes through the plain `set_*_unchecked()` accessors and lands on the fast row of
+that table; the CPU and copying paths get the same aligned stores for free.
 
 **Requirements**
 
